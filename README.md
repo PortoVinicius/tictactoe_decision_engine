@@ -8,7 +8,7 @@ O projeto usa **Tic-Tac-Toe** como ambiente controlado para estudar conceitos fu
 
 ---
 
-## Visão Geral da Evolução
+## Visão Geral
 
 ### Versão Inicial
 
