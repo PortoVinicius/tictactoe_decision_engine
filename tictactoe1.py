@@ -85,15 +85,13 @@ def choose_best_move(board):
 
     for i in range(9):
         if board[i] == " ":
-            future = simulate(board, i, "O")
-            score = evaluate(future)
-
+            board[i] = "O"
+            score = minimax(board, depth=3, is_maximizing=False)
+            board[i] = " "
             if score > best_score:
                 best_score = score
                 best_move = i
-                print("Testando jogada:", i, "Score:", score)
 
-    history.append(board.copy())
     return best_move
 
 # ===============================
@@ -133,6 +131,33 @@ def learn(result):
 # ===============================
 # Loop principal do jogo
 # ===============================
+
+def minimax(board, depth, is_maximizing):
+    score = evaluate(board)
+
+    # estados finais ou profundidade limite
+    if abs(score) == 100 or depth == 0 or " " not in board:
+        return score
+
+    if is_maximizing:
+        best = -999
+        for i in range(9):
+            if board[i] == " ":
+                board[i] = "O"
+                value = minimax(board, depth - 1, False)
+                board[i] = " "
+                best = max(best, value)
+        return best
+    else:
+        best = 999
+        for i in range(9):
+            if board[i] == " ":
+                board[i] = "X"
+                value = minimax(board, depth - 1, True)
+                board[i] = " "
+                best = min(best, value)
+        return best
+
 
 def game():
     board = [" "] * 9
