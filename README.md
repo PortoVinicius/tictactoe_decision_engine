@@ -1,109 +1,183 @@
-# Estudo – Motor de Decisão (Base do AlphaGo)
+# Estudo – Motor de Decisão Evoluído (Base Conceitual do AlphaGo)
 
-## Objetivo
+## Objetivo do Estudo
 
-Construir e compreender um **motor de decisão** simples (estado → avaliação → escolha) usando Tic-Tac-Toe, sem ML e sem LLM.
+Evoluir um **motor de decisão clássico (estado → simulação → avaliação → escolha)** para um modelo **heurístico com ajuste de pesos**, introduzindo **aprendizado simples** sem uso de Machine Learning tradicional ou LLMs.
 
----
-
-## O que foi construído
-
-* **Agente** que joga Tic-Tac-Toe contra um humano
-* **Estado**: lista de 9 posições do tabuleiro
-* **Ações**: jogar em qualquer casa vazia
-* **Simulação**: imaginar jogadas futuras sem alterar o estado real
-* **Avaliação**: pontuar estados como bons/ruins
-* **Escolha**: selecionar a melhor ação com base no score
+O projeto usa **Tic-Tac-Toe** como ambiente controlado para estudar conceitos fundamentais de IA clássica.
 
 ---
 
-## Arquitetura mental
+## Visão Geral da Evolução
+
+### Versão Inicial
+
+* Avaliação **binária**: ganhar (+1), perder (-1), neutro (0)
+* Olha apenas **1 jogada à frente**
+* Nenhum aprendizado
+* Comportamento totalmente determinístico
+
+### Versão Evoluída (atual)
+
+* Avaliação **heurística ponderada**
+* Reconhecimento de padrões intermediários (quase vitória / quase derrota)
+* Valorização posicional (controle do centro)
+* **Ajuste dinâmico de pesos** com base no resultado das partidas
+* Introdução de um **ciclo de aprendizado rudimentar**
+
+---
+
+## Arquitetura Mental (Atualizada)
 
 ```
 Estado atual (board)
    ↓
 Ações possíveis
    ↓
-Simulação (future board)
+Simulação (1 passo à frente)
    ↓
-Avaliação (score)
+Avaliação heurística (score contínuo)
    ↓
 Escolha da melhor ação
+   ↓
+Registro do histórico
+   ↓
+Ajuste de pesos (aprendizado)
 ```
 
 ---
 
-## Conceitos-chave (em linguagem simples)
+## Conceitos-Chave Introduzidos
 
-* **Estado**: fotografia do mundo agora
-* **Ação**: algo que pode ser feito
-* **Simular**: perguntar "e se eu fizer isso?"
-* **Avaliar**: dizer se o resultado é bom ou ruim
-* **Decidir**: escolher a opção menos ruim / mais boa
+### 1. Avaliação Heurística
 
----
+Em vez de apenas vitória/derrota, o estado do jogo recebe um **score contínuo** baseado em padrões:
 
-## Código – Papéis das funções
+* Duas peças da máquina + espaço livre
+* Duas peças do jogador + espaço livre
+* Controle do centro do tabuleiro
 
-* `board`: representa o estado
-* `print_board`: visualização (não é inteligência)
-* `check_winner`: regras fixas
-* `evaluate`: função de valor (+1 ganha, -1 perde, 0 neutro)
-* `simulate`: cria futuros possíveis
-* `choose_best_move`: motor de decisão (loop + avaliação)
+Isso permite decisões **mais estratégicas**, mesmo sem ver o fim do jogo.
 
 ---
 
-## O que este motor FAZ
+### 2. Pesos (WEIGHTS)
 
-* Avalia **1 jogada à frente**
-* Ganha quando pode
-* Bloqueia quando necessário
-* Segue um **loop determinístico**
+Os pesos representam a **importância relativa** de cada padrão:
 
-## O que este motor NÃO faz
+```python
+WEIGHTS = {
+    "two_O": 10,
+    "two_X": -10,
+    "center_O": 3,
+    "center_X": -3
+}
+```
 
-* Não aprende
-* Não planeja vários passos
+Eles funcionam como uma **função de valor parametrizada**.
+
+---
+
+### 3. Histórico de Estados
+
+Durante o jogo, o motor armazena os estados avaliados:
+
+```python
+history = []
+```
+
+Esse histórico é usado **após o jogo** para ajustar os pesos.
+
+---
+
+### 4. Aprendizado Simples (Weight Update)
+
+Após o término da partida, os pesos são ajustados com base no resultado:
+
+* Vitória → reforça padrões bons
+* Derrota → penaliza padrões ruins
+* Empate → ajuste neutro
+
+```python
+WEIGHTS[feature] += LEARNING_RATE * result
+```
+
+Isso é conceitualmente similar a:
+
+* Reforço
+* Funções de valor
+* Gradiente extremamente simplificado
+
+---
+
+## Papéis das Funções (Atualizado)
+
+| Função             | Papel                                |
+| ------------------ | ------------------------------------ |
+| `evaluate`         | Calcula score heurístico do estado   |
+| `simulate`         | Gera estado futuro hipotético        |
+| `choose_best_move` | Loop de decisão baseado em score     |
+| `history`          | Memória de curto prazo               |
+| `learn`            | Ajuste de pesos baseado em resultado |
+| `WEIGHTS`          | Conhecimento aprendido               |
+
+---
+
+## O Que Este Motor FAZ Agora
+
+* Avalia padrões intermediários
+* Prioriza posições estratégicas
+* Ajusta comportamento ao longo do tempo
+* Continua simples, explicável e rastreável
+
+---
+
+## O Que Este Motor AINDA NÃO FAZ
+
+* Não planeja múltiplos passos (sem Minimax)
 * Não usa probabilidade
-* Não entende significado
+* Não generaliza estados
+* Não possui exploração vs exploração
 
 ---
 
-## Ligação com AlphaGo (base da base)
+## Conexão Conceitual com AlphaGo
 
-| Nosso motor      | AlphaGo          |
-| ---------------- | ---------------- |
-| Estado simples   | Tabuleiro Go     |
-| Avaliação manual | Rede neural      |
-| Simulação rasa   | MCTS             |
-| Escolha direta   | Política + busca |
+| Este Projeto        | AlphaGo              |
+| ------------------- | -------------------- |
+| Heurísticas manuais | Redes neurais        |
+| Pesos ajustáveis    | Treinamento profundo |
+| Histórico simples   | Replay buffer        |
+| 1 passo             | MCTS profundo        |
 
-Mesma ideia estrutural, outra escala.
-
----
-
-## Aprendizados principais
-
-* Decisão pode ser **matemática**, não cognitiva
-* Estratégia nasce de **simular + avaliar**
-* Visualização ajuda o humano, não a máquina
-* A base vem antes de ML/LLM
+> A **estrutura mental é a mesma** — muda apenas a escala e o poder computacional.
 
 ---
 
-## Próximos passos
+## Aprendizados Principais
 
-* Minimax (2+ passos à frente)
-* Empate perfeito (invencível)
-* Aprendizado de avaliação
-* Conexão conceitual com MCTS
+* Inteligência pode surgir de **avaliação + ajuste**, não de cognição
+* Pesos = conhecimento codificado
+* Aprendizado não precisa ser complexo para ser real
+* Entender isso antes de ML/LLM é fundamental
 
 ---
 
-## Status
+## Próximos Passos Naturais
 
-✔ Motor funcional
-✔ Entendimento do fluxo
-✔ Pronto para evoluir
-#tictactoe_decision_engine
+* Minimax (2+ profundidades)
+* Normalização de pesos
+* Exploração aleatória controlada
+* Separação treino vs jogo
+* Transição conceitual para MCTS
+
+---
+
+## Status Atual
+
+✔ Motor heurístico funcional
+✔ Aprendizado simples implementado
+✔ Base sólida para IA clássica
+✔ Excelente material de estudo
+
+#tictactoe #decision_engine #heuristics #learning #ai_basics

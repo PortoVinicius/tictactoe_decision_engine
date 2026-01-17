@@ -1,10 +1,30 @@
+# ===============================
 # Tic-Tac-Toe: Humano vs Motor de Decisão
+# ===============================
 
+# Histórico para aprendizado
+history = []
+
+# Pesos da avaliação
+WEIGHTS = {
+    "two_O": 10,
+    "two_X": -10,
+    "center_O": 3,
+    "center_X": -3
+}
+
+LEARNING_RATE = 0.1
+
+# Combinações vencedoras
 WIN_COMBOS = [
-    (0,1,2),(3,4,5),(6,7,8),
-    (0,3,6),(1,4,7),(2,5,8),
-    (0,4,8),(2,4,6)
+    (0, 1, 2), (3, 4, 5), (6, 7, 8),
+    (0, 3, 6), (1, 4, 7), (2, 5, 8),
+    (0, 4, 8), (2, 4, 6)
 ]
+
+# ===============================
+# Funções utilitárias
+# ===============================
 
 def print_board(board):
     print()
@@ -16,39 +36,43 @@ def print_board(board):
     print()
 
 def check_winner(board, player):
-    for a,b,c in WIN_COMBOS:
+    for a, b, c in WIN_COMBOS:
         if board[a] == board[b] == board[c] == player:
             return True
     return False
 
-# Avaliação por padrões (manual) ==> Criar uma avaliação um pouco mais inteligente
+# ===============================
+# Avaliação do tabuleiro
+# ===============================
+
 def evaluate(board):
     score = 0
 
-    # Vitória / derrota ainda têm peso máximo
     if check_winner(board, "O"):
         return 100
     if check_winner(board, "X"):
         return -100
 
-    # Avaliar linhas
     for a, b, c in WIN_COMBOS:
         line = [board[a], board[b], board[c]]
 
         if line.count("O") == 2 and line.count(" ") == 1:
-            score += 10   # quase ganhando
+            score += WEIGHTS["two_O"]
+
         if line.count("X") == 2 and line.count(" ") == 1:
-            score -= 10   # quase perdendo
+            score += WEIGHTS["two_X"]
 
-    # Centro é valioso
     if board[4] == "O":
-        score += 20   # quase ganhando
-    if board[4] == "X":
-        score -= 5    # quase perdendo
+        score += WEIGHTS["center_O"]
 
+    if board[4] == "X":
+        score += WEIGHTS["center_X"]
 
     return score
 
+# ===============================
+# Simulação e decisão da máquina
+# ===============================
 
 def simulate(board, move, player):
     new_board = board.copy()
@@ -69,7 +93,12 @@ def choose_best_move(board):
                 best_move = i
                 print("Testando jogada:", i, "Score:", score)
 
+    history.append(board.copy())
     return best_move
+
+# ===============================
+# Jogada do jogador
+# ===============================
 
 def player_move(board):
     move = int(input("Escolha uma posição (0-8): "))
@@ -78,6 +107,32 @@ def player_move(board):
     else:
         print("Posição inválida")
         player_move(board)
+
+# ===============================
+# Aprendizado
+# ===============================
+
+def learn(result):
+    # result = 1 (vitória), -1 (derrota), 0 (empate)
+    for board in history:
+        for a, b, c in WIN_COMBOS:
+            line = [board[a], board[b], board[c]]
+
+            if line.count("O") == 2 and line.count(" ") == 1:
+                WEIGHTS["two_O"] += LEARNING_RATE * result
+
+            if line.count("X") == 2 and line.count(" ") == 1:
+                WEIGHTS["two_X"] -= LEARNING_RATE * result
+
+        if board[4] == "O":
+            WEIGHTS["center_O"] += LEARNING_RATE * result
+
+        if board[4] == "X":
+            WEIGHTS["center_X"] -= LEARNING_RATE * result
+
+# ===============================
+# Loop principal do jogo
+# ===============================
 
 def game():
     board = [" "] * 9
@@ -102,5 +157,16 @@ def game():
             print_board(board)
             print("A máquina venceu!")
             break
+
+    learn(1)
+    learn(-1)
+    learn(0)
+
+    history.clear()
+    print(WEIGHTS)
+
+# ===============================
+# Início do jogo
+# ===============================
 
 game()
