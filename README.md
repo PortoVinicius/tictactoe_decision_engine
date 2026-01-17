@@ -92,7 +92,7 @@ Mesma ideia estrutural, outra escala.
 
 ---
 
-## Próximos passos (quando voltar)
+## Próximos passos
 
 * Minimax (2+ passos à frente)
 * Empate perfeito (invencível)

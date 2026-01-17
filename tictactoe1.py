@@ -21,13 +21,33 @@ def check_winner(board, player):
             return True
     return False
 
-# Avaliação por padrões ==>  Ele só olha 1 jogada à frente
+# Avaliação por padrões (manual) ==> Criar uma avaliação um pouco mais inteligente
 def evaluate(board):
+    score = 0
+
+    # Vitória / derrota ainda têm peso máximo
     if check_winner(board, "O"):
-        return 1
+        return 100
     if check_winner(board, "X"):
-        return -1
-    return 0
+        return -100
+
+    # Avaliar linhas
+    for a, b, c in WIN_COMBOS:
+        line = [board[a], board[b], board[c]]
+
+        if line.count("O") == 2 and line.count(" ") == 1:
+            score += 10   # quase ganhando
+        if line.count("X") == 2 and line.count(" ") == 1:
+            score -= 10   # quase perdendo
+
+    # Centro é valioso
+    if board[4] == "O":
+        score += 3
+    if board[4] == "X":
+        score -= 3
+
+    return score
+
 
 def simulate(board, move, player):
     new_board = board.copy()
