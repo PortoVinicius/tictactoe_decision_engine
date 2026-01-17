@@ -42,9 +42,10 @@ def evaluate(board):
 
     # Centro é valioso
     if board[4] == "O":
-        score += 3
+        score += 20   # quase ganhando
     if board[4] == "X":
-        score -= 3
+        score -= 5    # quase perdendo
+
 
     return score
 
